@@ -6,6 +6,7 @@ const multer = require("multer");
 const mongoose = require("mongoose");
 const app = express();
 app.use(express.json());
+app.use(cors());
 dotevn.config();
 mongoose
   .connect(process.env.MONGO_STRING)
@@ -13,6 +14,10 @@ mongoose
   .catch((err) => console.log(err));
 const port = 3001;
 const Product = require("./routes/ProductRoutes");
-app.use("/product", Product);
+const User = require("./routes/UserRoutes");
+const Cart = require("./routes/CartRoutes");
+app.use("/api/v1/product", Product);
+app.use("/api/v1/user", User);
+app.use("/api/v1/cart", Cart);
 
 app.listen(port, () => console.log(`Running on port: ${port}`));

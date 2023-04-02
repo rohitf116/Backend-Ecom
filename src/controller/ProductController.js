@@ -1,7 +1,7 @@
 "use strict";
 const Product = require("../model/ProductModel");
 
-const { isValid } = require("../utils/regex");
+const { isValid, isValidObjectId } = require("../utils/regex");
 const products = require("../products");
 
 exports.createProduct = async (req, res) => {
@@ -73,39 +73,46 @@ exports.createProduct = async (req, res) => {
   }
 };
 
-const feedData = async (arr) => {
-  let i = 0;
-  while (i < arr.length) {
-    const { name, image, description, brand, category, price, countInStock } =
-      arr[i];
-    const producrCreated = await Product.create({
-      name,
-      image,
-      description,
-      brand,
-      category,
-      price,
-      countInStock,
-      rating,
-      numReviews,
-    });
-    console.log(producrCreated);
-    i++;
-  }
-};
 exports.getAllProduct = async (req, res) => {
   try {
     const foundData = await Product.find();
-    await feedData(products);
-    res
-      .status(200)
-      .json({ status: true, message: "Succesfully fetched", data: foundData });
+    res.status(200).json({
+      status: true,
+      message: "Succesfully fetched",
+      numOfItems: foundData.length,
+      data: foundData,
+    });
   } catch (error) {
     console.log(error);
     res
       .status(500)
-      .json({ status: false, message: "Server Error", error: error.message });
+      .json({ status: false, message: "Server Error", error: error });
   }
 };
 
-// console.log(products);
+exports.getProductDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isValidObjectId(id)) {
+      return res
+        .status(400)
+        .json({ status: false, message: "Invalid object id" });
+    }
+    const foundProduct = await Product.findOne({ _id: id });
+    if (!foundProduct) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Product not found" });
+    }
+    res.status(200).json({
+      status: true,
+      message: "Productdetails fetched",
+      data: foundProduct,
+    });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ status: false, message: "Server Error", error: error });
+  }
+};
