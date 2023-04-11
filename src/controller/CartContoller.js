@@ -42,7 +42,14 @@ exports.createCart = async (req, res) => {
         foundCart.totalPrice += foundProduct.price * qty;
         foundCart.totalItems += qty;
       } else {
-        foundCart.items.push({ quantity: qty, productId: id });
+        foundCart.items.push({
+          quantity: qty,
+          productId: id,
+          name: foundProduct.name,
+          price: foundProduct.price,
+          image: foundProduct.image,
+          countInStock: foundProduct.countInStock,
+        });
         foundCart.totalPrice += foundProduct.price * qty;
         foundCart.totalItems += qty;
       }
@@ -54,7 +61,17 @@ exports.createCart = async (req, res) => {
         data: foundCart,
       });
     }
-    const items = [{ quantity: qty, productId: id }];
+
+    const items = [
+      {
+        quantity: qty,
+        productId: id,
+        name: foundProduct.name,
+        price: foundProduct.price,
+        image: foundProduct.image,
+        countInStock: foundProduct.countInStock,
+      },
+    ];
 
     const createdCart = await Cart.create({
       userId,
@@ -80,6 +97,7 @@ exports.createCart = async (req, res) => {
 exports.removeFromCart = async (req, res) => {
   try {
     const userId = req?.user?._id || "64296ff269b4af7ec7a14e64";
+    console.log(req.body);
     const foundUser = await User.findOne({ _id: userId });
     if (!foundUser) {
       return res
@@ -87,16 +105,17 @@ exports.removeFromCart = async (req, res) => {
         .json({ status: false, message: "Product not found" });
     }
     const { id, qty } = req.body;
-    if (!isValidObjectId(id)) {
-      return res
-        .status(400)
-        .json({ status: false, message: "Invalid object id" });
-    }
+    // if (!isValidObjectId(id)) {
+    //   return res
+    //     .status(400)
+    //     .json({ status: false, message: "Invalid object id" });
+    // }
     if (qty && isNaN(qty)) {
       return res
         .status(400)
         .json({ status: false, message: "Invalid quantity" });
     }
+    console.log(id);
     const foundProduct = await Product.findOne({ _id: id });
     if (!foundProduct) {
       return res

@@ -8,6 +8,10 @@ const cartSchema = new Schema(
       {
         quantity: { type: Number, min: 1 },
         productId: { type: ObjectId, ref: "Product" },
+        name: String,
+        price: Number,
+        image: String,
+        countInStock: Number,
       },
     ],
     totalPrice: { type: Number, required: true },
