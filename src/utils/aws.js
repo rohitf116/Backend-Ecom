@@ -5,7 +5,7 @@ dotenv.config();
 
 aws.config.update({
   accessKeyId: process.env.accessKeyId,
-  secretAccessKey:process.env.secretAccessKey ,
+  secretAccessKey: process.env.secretAccessKey,
   region: "ap-south-1",
 });
 

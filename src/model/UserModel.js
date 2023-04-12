@@ -8,19 +8,33 @@ const UserSchema = new Schema(
       type: String,
       required: true,
     },
-
     email: {
-      type: String,
-      required: true,
-      unique: true,
+      isVerified: {
+        type: Boolean,
+        default: false,
+      },
+      value: {
+        type: String,
+        required: true,
+        unique: true,
+      },
     },
-
+    otp: {
+      email: {
+        value: { type: String, default: null },
+        expiry: Date,
+      },
+    },
+    tokenVersion: {
+      type: Number,
+      default: 0,
+    },
     password: {
       type: String,
       required: true,
     },
     isAdmin: {
-      type: String,
+      type: Boolean,
       default: false,
     },
     cart: { type: ObjectId, ref: "Cart" },
