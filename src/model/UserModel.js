@@ -37,6 +37,7 @@ const UserSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    isDeleted: { type: Boolean, default: false },
     cart: { type: ObjectId, ref: "Cart" },
   },
   { timestamps: true }

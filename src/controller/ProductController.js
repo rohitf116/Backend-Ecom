@@ -2,7 +2,6 @@
 const Product = require("../model/ProductModel");
 
 const { isValid, isValidObjectId } = require("../utils/regex");
-const products = require("../products");
 
 exports.createProduct = async (req, res) => {
   try {
@@ -75,7 +74,7 @@ exports.createProduct = async (req, res) => {
 
 exports.getAllProduct = async (req, res) => {
   try {
-    const foundData = await Product.find();
+    const foundData = await Product.find({ isDeleted: false });
     res.status(200).json({
       status: true,
       message: "Succesfully fetched",
@@ -98,7 +97,7 @@ exports.getProductDetails = async (req, res) => {
         .status(400)
         .json({ status: false, message: "Invalid object id" });
     }
-    const foundProduct = await Product.findOne({ _id: id });
+    const foundProduct = await Product.findOne({ isDeleted: false, _id: id });
     if (!foundProduct) {
       return res
         .status(404)

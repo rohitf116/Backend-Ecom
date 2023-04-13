@@ -4,9 +4,11 @@ const cors = require("cors");
 const dotevn = require("dotenv");
 const multer = require("multer");
 const mongoose = require("mongoose");
+const cookieParser = require("cookie-parser");
 const app = express();
 app.use(express.json());
 app.use(cors());
+app.use(cookieParser());
 dotevn.config();
 mongoose
   .connect(process.env.MONGO_STRING)

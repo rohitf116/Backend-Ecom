@@ -5,13 +5,23 @@ const {
   login,
   verifyEmailOtp,
   regenerateEmailOTP,
+  getUser,
+  deleteUser,
+  updateUser,
 } = require("../controller/UserController");
+const { isAuth } = require("../middleware/isAuth");
+const { routeNotfound } = require("../middleware/notFound");
 const router = express.Router();
 
-router.post("/", createUser);
+router
+  .post("/", createUser)
+  .get("/", isAuth, getUser)
+  .delete("/", isAuth, deleteUser)
+  .patch("/", isAuth, updateUser);
 router.post("/login", login);
 router.post("/verify", verifyEmailOtp);
 router.patch("/resent", regenerateEmailOTP);
 // router.get("/:id", getProductDetails);
+router.use("*", routeNotfound);
 
 module.exports = router;

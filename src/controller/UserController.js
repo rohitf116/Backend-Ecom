@@ -1,4 +1,5 @@
 const User = require("../model/UserModel");
+const dotenv = require("dotenv");
 const { isValid, isValidEmail, isValidObjectId } = require("../utils/regex");
 const { sendMail } = require("../utils/communications");
 const { generateExpiry, generateOTP } = require("../utils/calculation");
@@ -6,8 +7,13 @@ const {
   hashPassword,
   verifyHashedPassword,
   generateAndHashOTP,
+  generateJWT,
 } = require("../utils/securityAndEncryption");
 const { showRespnse } = require("../utils/showResponse");
+const jwt = require("jsonwebtoken");
+const UserModel = require("../model/UserModel");
+dotenv.config();
+const secret = process.env.SECRET;
 exports.createUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -36,14 +42,18 @@ exports.createUser = async (req, res) => {
       isVerified: false,
     };
     const simpleOtp = generateOTP();
-    const otp = generateAndHashOTP(simpleOtp);
+    const otp = await generateAndHashOTP(simpleOtp);
 
-    const foundEmail = await User.findOne({ "email.value": email });
+    const foundEmail = await User.findOne({
+      isDeleted: false,
+      "email.value": email,
+    });
     if (foundEmail) {
       return res
         .status(400)
         .json({ success: false, message: "This email is already exist" });
     }
+    console.log(emailData, otp);
     const createdUser = await User.create({
       name,
       email: emailData,
@@ -71,6 +81,28 @@ exports.createUser = async (req, res) => {
   }
 };
 
+exports.getUser = async (req, res) => {
+  try {
+    const id = req.user.id;
+    console.log(id);
+    const foundUser = await UserModel.findOne({ isDeleted: false, _id: id });
+    console.log(foundUser);
+    if (!foundUser) {
+      return res.status(404).json({ status: false, message: "User not found" });
+    }
+    const response = showRespnse(foundUser, "user");
+    res.status(200).json({
+      status: true,
+      message: "User fetched successfully",
+      data: response,
+    });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ status: false, message: "Server Error", error: error.message });
+  }
+};
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -80,9 +112,14 @@ exports.login = async (req, res) => {
         .json({ status: false, message: "email and password are required" });
     }
     if (!isValidEmail(email)) {
-      return res.status(400).json({ status: false, message: "Invalid email" });
+      return res
+        .status(400)
+        .json({ isDeleted: false, status: false, message: "Invalid email" });
     }
-    const foundUser = await User.findOne({ "email.value": email });
+    const foundUser = await User.findOne({
+      isDeleted: false,
+      "email.value": email,
+    });
     if (!foundUser) {
       return res.status(404).json({ status: false, message: "User not found" });
     }
@@ -99,10 +136,14 @@ exports.login = async (req, res) => {
         .status(400)
         .json({ status: false, message: "Incorrect password" });
     }
+    const token = generateJWT(foundUser);
     const response = showRespnse(foundUser, "login");
     res
       .status(200)
-      .json({ status: false, message: "Login success", data: response });
+      .cookie("LOGIN_HASH", token, {
+        httpOnly: false,
+      })
+      .json({ status: true, message: "Login success", data: response });
   } catch (error) {
     console.log(error);
     res
@@ -132,7 +173,10 @@ exports.verifyEmailOtp = async (req, res) => {
         .status(400)
         .json({ status: false, message: "otp must be a number" });
     }
-    const foundEmail = await User.findOne({ "email.value": email });
+    const foundEmail = await User.findOne({
+      isDeleted: false,
+      "email.value": email,
+    });
     if (!foundEmail) {
       return res
         .status(404)
@@ -179,7 +223,10 @@ exports.regenerateEmailOTP = async (req, res) => {
     if (!isValidEmail(email)) {
       return res.status(400).json({ status: false, message: "Invalid email" });
     }
-    const foundEmail = await User.findOne({ "email.value": email });
+    const foundEmail = await User.findOne({
+      isDeleted: false,
+      "email.value": email,
+    });
     if (!foundEmail) {
       return res
         .status(404)
@@ -201,6 +248,91 @@ exports.regenerateEmailOTP = async (req, res) => {
       `<p>You OTP is :${Number(simpleOtp)} </p>  `
     );
     res.status(200).json({ status: true, message: "Otp Resent" });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ status: false, message: "Server Error", error: error.message });
+  }
+};
+
+exports.updateUser = async (req, res) => {
+  try {
+    const id = req.user.id;
+    const { name } = req.body;
+    const foundUser = await User.findOne({ isDeleted: false, _id: id });
+    if (!foundUser) {
+      return res.status(404).json({ status: false, message: "User not found" });
+    }
+    if (name && isValid(name)) {
+      foundUser.name = name;
+    }
+    await foundUser.save();
+    const response = showRespnse(foundUser, "user");
+    res
+      .status(200)
+      .json({ status: true, message: "User details updated", data: response });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ status: false, message: "Server Error", error: error.message });
+  }
+};
+exports.deleteUser = async (req, res) => {
+  try {
+    const id = req.user.id;
+    const foundUser = await User.findOne({ isDeleted: false, _id: id });
+
+    if (!foundUser) {
+      return res.status(404).json({ status: false, message: "User not found" });
+    }
+    if (foundUser.isDeleted) {
+      return res.status(404).json({ status: false, message: "User not found" });
+    }
+    foundUser.isDeleted = true;
+    await foundUser.save();
+    res.status(203).json({ status: true, message: "User is deleted" });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ status: false, message: "Server Error", error: error.message });
+  }
+};
+
+exports.changePassword = async (req, res) => {
+  try {
+    const id = req.user.id;
+    const { password } = req.body;
+
+    if (!password || !isValid(password)) {
+      return res
+        .status(400)
+        .json({ status: false, message: "Name cannot be empty" });
+    }
+    const foundUser = await UserModel.findOne({ isDeleted: false, _id: id });
+    if (!foundUser) {
+      return res.status(404).json({ status: false, message: "User not found" });
+    }
+    const isMatch = await verifyHashedPassword(password, foundUser.password);
+
+    if (!isMatch) {
+      return res
+        .status(400)
+        .json({ status: false, message: "Incorrect password" });
+    }
+    const hashedPassword = await hashPassword(password);
+    foundUser.password = hashedPassword;
+    await foundUser.save();
+    const response = showRespnse(foundUser, "user");
+    res
+      .status(200)
+      .json({
+        status: true,
+        message: "Password successfully changed",
+        data: response,
+      });
   } catch (error) {
     console.log(error);
     res

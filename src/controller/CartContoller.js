@@ -31,7 +31,9 @@ exports.createCart = async (req, res) => {
         .json({ status: false, message: "Product not found" });
     }
 
-    const foundCart = await Cart.findOne({ _id: foundUser.cart });
+    const foundCart = await Cart.findOne({
+      _id: foundUser.cart,
+    });
     console.log(foundCart);
     if (foundCart) {
       const isItemExsit = foundCart.items.find(
@@ -122,7 +124,9 @@ exports.removeFromCart = async (req, res) => {
         .status(404)
         .json({ status: false, message: "Product not found" });
     }
-    const foundCart = await Cart.findOne({ _id: foundUser?.cart });
+    const foundCart = await Cart.findOne({
+      _id: foundUser?.cart,
+    });
     if (!foundCart) {
       return res.status(404).json({ status: false, message: "Cart not found" });
     }
