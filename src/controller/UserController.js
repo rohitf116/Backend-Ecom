@@ -138,6 +138,7 @@ exports.login = async (req, res) => {
     }
     const token = generateJWT(foundUser);
     const response = showRespnse(foundUser, "login");
+    response.token = token;
     res
       .status(200)
       .cookie("LOGIN_HASH", token, {
@@ -177,6 +178,7 @@ exports.verifyEmailOtp = async (req, res) => {
       isDeleted: false,
       "email.value": email,
     });
+    console.log(foundEmail, "emmmm");
     if (!foundEmail) {
       return res
         .status(404)
@@ -187,13 +189,17 @@ exports.verifyEmailOtp = async (req, res) => {
         .status(404)
         .json({ status: false, message: "Email is already verified" });
     }
+
     if (foundEmail.otp.email.expiry < Date.now()) {
       return res.status(404).json({ status: false, message: "OTP is expired" });
     }
+    console.log(foundEmail.otp.email.value, "------------");
+
     const isMatch = await verifyHashedPassword(
       String(otp),
       foundEmail.otp.email.value
     );
+    console.log(201, "------------");
     if (!isMatch) {
       return res
         .status(400)
@@ -238,7 +244,7 @@ exports.regenerateEmailOTP = async (req, res) => {
         .json({ status: false, message: "Email is already verified" });
     }
     const simpleOtp = generateOTP();
-    const otp = generateAndHashOTP(simpleOtp);
+    const otp = await generateAndHashOTP(simpleOtp);
     foundEmail.otp = otp;
     await foundEmail.save();
     sendMail(
@@ -326,13 +332,11 @@ exports.changePassword = async (req, res) => {
     foundUser.password = hashedPassword;
     await foundUser.save();
     const response = showRespnse(foundUser, "user");
-    res
-      .status(200)
-      .json({
-        status: true,
-        message: "Password successfully changed",
-        data: response,
-      });
+    res.status(200).json({
+      status: true,
+      message: "Password successfully changed",
+      data: response,
+    });
   } catch (error) {
     console.log(error);
     res

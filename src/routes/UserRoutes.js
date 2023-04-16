@@ -8,6 +8,7 @@ const {
   getUser,
   deleteUser,
   updateUser,
+  changePassword,
 } = require("../controller/UserController");
 const { isAuth } = require("../middleware/isAuth");
 const { routeNotfound } = require("../middleware/notFound");
@@ -17,7 +18,8 @@ router
   .post("/", createUser)
   .get("/", isAuth, getUser)
   .delete("/", isAuth, deleteUser)
-  .patch("/", isAuth, updateUser);
+  .patch("/", isAuth, updateUser)
+  .put("/", changePassword);
 router.post("/login", login);
 router.post("/verify", verifyEmailOtp);
 router.patch("/resent", regenerateEmailOTP);

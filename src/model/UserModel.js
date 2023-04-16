@@ -27,7 +27,7 @@ const UserSchema = new Schema(
     },
     tokenVersion: {
       type: Number,
-      default: 0,
+      default: 1,
     },
     password: {
       type: String,

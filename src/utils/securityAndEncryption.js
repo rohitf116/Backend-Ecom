@@ -18,7 +18,13 @@ exports.generateAndHashOTP = async (oneTimePassword) => {
 
 exports.generateJWT = (user) => {
   return (token = jwt.sign(
-    { id: user._id, version: user.tokenVersion, isAdmin: user.isAdmin },
+    {
+      id: user._id,
+      version: user.tokenVersion,
+      name: user.name,
+      email: user.email.value,
+      isAdmin: user.isAdmin,
+    },
     secret + user.tokenVersion,
     { expiresIn: "1D" }
   ));

@@ -5,9 +5,10 @@ const { isValid, isValidObjectId } = require("../utils/regex");
 
 exports.createCart = async (req, res) => {
   try {
-    const userId = req?.user?._id || "64296ff269b4af7ec7a14e64";
+    const userId = req?.user.id;
+    console.log(userId, "userId");
     const foundUser = await User.findOne({ _id: userId });
-    console.log(foundUser);
+    console.log(foundUser, "-----------------++++++++++");
     if (!foundUser) {
       return res
         .status(404)
@@ -98,7 +99,7 @@ exports.createCart = async (req, res) => {
 
 exports.removeFromCart = async (req, res) => {
   try {
-    const userId = req?.user?._id || "64296ff269b4af7ec7a14e64";
+    const userId = req?.user?.id;
     console.log(req.body);
     const foundUser = await User.findOne({ _id: userId });
     if (!foundUser) {
@@ -106,7 +107,9 @@ exports.removeFromCart = async (req, res) => {
         .status(404)
         .json({ status: false, message: "Product not found" });
     }
+
     const { id, qty } = req.body;
+    console.log(id, "id");
     // if (!isValidObjectId(id)) {
     //   return res
     //     .status(400)
@@ -161,6 +164,32 @@ exports.removeFromCart = async (req, res) => {
     res.status(200).json({
       status: true,
       message: "Product succesfully removed",
+      data: foundCart,
+    });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ status: false, message: "Server Error", error: error.message });
+  }
+};
+exports.getCartDetails = async (req, res) => {
+  try {
+    const id = req.user.id;
+    console.log(id);
+    const foundUser = await User.findOne({ _id: id });
+
+    if (!foundUser) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Product not found" });
+    }
+    const foundCart = await Cart.findOne({
+      _id: foundUser.cart,
+    });
+    res.status(200).json({
+      status: true,
+      message: "Cart successfull fetched",
       data: foundCart,
     });
   } catch (error) {
