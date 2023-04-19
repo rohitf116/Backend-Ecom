@@ -7,16 +7,19 @@ const UserSchema = new Schema(
     name: {
       type: String,
       required: true,
+      trim: true,
     },
     email: {
       isVerified: {
         type: Boolean,
         default: false,
+        trim: true,
       },
       value: {
         type: String,
         required: true,
         unique: true,
+        trim: true,
       },
     },
     otp: {
@@ -31,6 +34,7 @@ const UserSchema = new Schema(
     },
     password: {
       type: String,
+      trim: true,
       required: true,
     },
     isAdmin: {
@@ -39,6 +43,14 @@ const UserSchema = new Schema(
     },
     isDeleted: { type: Boolean, default: false },
     cart: { type: ObjectId, ref: "Cart" },
+    address: [
+      {
+        street: String,
+        city: String,
+        postalCode: Number,
+        country: String,
+      },
+    ],
   },
   { timestamps: true }
 );

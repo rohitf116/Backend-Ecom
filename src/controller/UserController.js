@@ -315,7 +315,7 @@ exports.changePassword = async (req, res) => {
     if (!password || !isValid(password)) {
       return res
         .status(400)
-        .json({ status: false, message: "Name cannot be empty" });
+        .json({ status: false, message: "password cannot be empty" });
     }
     const foundUser = await UserModel.findOne({ isDeleted: false, _id: id });
     if (!foundUser) {
@@ -336,6 +336,140 @@ exports.changePassword = async (req, res) => {
       status: true,
       message: "Password successfully changed",
       data: response,
+    });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ status: false, message: "Server Error", error: error.message });
+  }
+};
+exports.addAddress = async (req, res) => {
+  try {
+    const id = req.user.id;
+    const { street, city, postalCode, country = "India" } = req.body;
+    if (!isValid(street)) {
+      return res
+        .status(400)
+        .json({ status: false, message: "street cannot be empty" });
+    }
+    if (!isValid(city)) {
+      return res
+        .status(400)
+        .json({ status: false, message: "city cannot be empty" });
+    }
+    if (!isValid(postalCode)) {
+      return res
+        .status(400)
+        .json({ status: false, message: "postalCode cannot be empty" });
+    }
+    if (isNaN(postalCode)) {
+      return res
+        .status(400)
+        .json({ status: false, message: "postalCode must be a number" });
+    }
+    if (!isValid(street)) {
+      return res
+        .status(400)
+        .json({ status: false, message: "street cannot be empty" });
+    }
+    const foundUser = await UserModel.findOne({ _id: id });
+    if (!foundUser) {
+      return res.status(404).json({ status: false, message: "User not found" });
+    }
+    foundUser.address.push({ street, city, postalCode, country });
+    const lastAddress = foundUser.address[foundUser.address.length - 1];
+    await foundUser.save();
+    res.status(200).json({
+      status: true,
+      message: "Address added succesfully",
+      data: lastAddress,
+    });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ status: false, message: "Server Error", error: error.message });
+  }
+};
+
+exports.getAddress = async (req, res) => {
+  try {
+    const id = req.user.id;
+    const foundUser = await UserModel.findOne({ _id: id });
+    if (!foundUser) {
+      return res.status(404).json({ status: false, message: "User not found" });
+    }
+    const address = foundUser?.address || [];
+    res.status(200).json({
+      status: true,
+      message: "Address fetched succesfully",
+      data: address,
+    });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ status: false, message: "Server Error", error: error.message });
+  }
+};
+
+exports.updateAddress = async (req, res) => {
+  try {
+    const id = req.user.id;
+    const { street, city, postalCode, country, index = 0 } = req.body;
+
+    if (!isValid(street)) {
+      return res
+        .status(400)
+        .json({ status: false, message: "street cannot be empty" });
+    }
+    if (!isValid(city)) {
+      return res
+        .status(400)
+        .json({ status: false, message: "city cannot be empty" });
+    }
+    if (!isValid(postalCode) && isNaN(postalCode)) {
+      return res
+        .status(400)
+        .json({ status: false, message: "postalcode cannot be empty" });
+    }
+    if (isNaN(postalCode)) {
+      return res
+        .status(400)
+        .json({ status: false, message: "postalCode must be number" });
+    }
+    if (!isValid(country)) {
+      return res
+        .status(400)
+        .json({ status: false, message: "country cannot be empty" });
+    }
+
+    if (index ?? !isValid(index)) {
+      return res
+        .status(400)
+        .json({ status: false, message: "index cannot be empty" });
+    }
+    if (index ?? isNaN(index)) {
+      return res
+        .status(400)
+        .json({ status: false, message: "index must be number" });
+    }
+    const foundUser = await UserModel.findOne({ _id: id });
+    if (!foundUser) {
+      return res.status(404).json({ status: false, message: "User not found" });
+    }
+    const deepArray = [...foundUser.address];
+    if (index >= deepArray.length) {
+      return res.status(400).json({ status: false, message: "Invalid index" });
+    }
+    deepArray[index] = { street, city, postalCode, country };
+    foundUser.address = deepArray;
+    await foundUser.save();
+    res.status(200).json({
+      status: true,
+      message: "Address updated succesfully",
+      data: foundUser.address[index],
     });
   } catch (error) {
     console.log(error);

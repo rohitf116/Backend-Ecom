@@ -82,50 +82,7 @@ exports.createDomain = async (req, res) => {
     };
     // Creating metadata object using cloudflare response data
     const { name, url, timezone } = req.body;
-    // Destructuring name, url, and timezone from request body
-    const options = {
-      method: "GET",
-      url: `${matomoUrl}/index.php`,
-      params: {
-        module: "API",
-        method: "SitesManager.addSite",
-        format: "json",
-        token_auth: authToken,
-        siteName: domain_name,
-        urls: domain_name,
-        timezone: "Asia/Kolkata",
-      },
-    };
-    // Creating options object for matomo API request
-    const { data } = await axios(options);
-    // Sending GET request to matomo API, receiving response
 
-    if (!data?.value) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Unable to create id in motamo" });
-    }
-    metadata.matomoId = String(data.value);
-    //
-    const header = `<!-- Matomo -->
-    <script>
-      var _paq = window._paq = window._paq || [];
-      /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
-      _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
-      _paq.push(["setCookieDomain", "*.${domain_name}"]);
-      _paq.push(["setDomains", ["*.${domain_name}"]]);
-      _paq.push(['trackPageView']);
-      _paq.push(['enableLinkTracking']);
-      (function() {
-        var u="https://rohitsonawanecom.matomo.cloud/";
-        _paq.push(['setTrackerUrl', u+'matomo.php']);
-        _paq.push(['setSiteId', ${data.value}]);
-        var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-        g.async=true; g.src='//cdn.matomo.cloud/rohitsonawanecom.matomo.cloud/matomo.js'; s.parentNode.insertBefore(g,s);
-      })();
-    </script>
-    <!-- End Matomo Code -->`;
-    metadata.headers = header;
     const domain = await Domain.create({
       domain_name,
       domain_owner,

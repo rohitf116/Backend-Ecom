@@ -9,6 +9,9 @@ const {
   deleteUser,
   updateUser,
   changePassword,
+  addAddress,
+  getAddress,
+  updateAddress,
 } = require("../controller/UserController");
 const { isAuth } = require("../middleware/isAuth");
 const { routeNotfound } = require("../middleware/notFound");
@@ -23,6 +26,10 @@ router
 router.post("/login", login);
 router.post("/verify", verifyEmailOtp);
 router.patch("/resent", regenerateEmailOTP);
+router
+  .post("/address", isAuth, addAddress)
+  .get("/address", isAuth, getAddress)
+  .put("/address", isAuth, updateAddress);
 // router.get("/:id", getProductDetails);
 router.use("*", routeNotfound);
 

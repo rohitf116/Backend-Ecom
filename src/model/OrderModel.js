@@ -61,6 +61,7 @@ const OrderSchema = new Schema(
     deleveredAt: {
       type: Date,
     },
+    metadata: { type: Object },
   },
   { timestamps: true }
 );
